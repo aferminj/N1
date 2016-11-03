@@ -43,10 +43,7 @@ module.exports = (grunt) => {
 
     host.compileAll(buildPath, (filepath) => {
       const relativePath = filepath.replace(buildPath).replace('undefined/', '/');
-      if (filepath.endsWith('.less')) {
-        return false;
-      }
-      return relativePath.startsWith('/src') || relativePath.startsWith('/internal_packages');
+      return relativePath.startsWith('/src') || relativePath.startsWith('/internal_packages') || relativePath.startsWith('/static');
     })
     .then(() => {
       host.saveConfiguration().then(callback)
@@ -61,28 +58,35 @@ module.exports = (grunt) => {
     'tmpdir': tmpdir,
     'app-copyright': 'Copyright 2014-2016 Nylas',
     'derefSymlinks': false,
-    'asar': false,
-    // {
-    //   'unpack': "{" + [
-    //     '*.node',
-    //     '**/vendor/**',
-    //     'examples/**',
-    //     '**/src/tasks/**',
-    //     '**/node_modules/spellchecker/**',
-    //     '**/node_modules/windows-shortcuts/**',
-    //   ].join(',') + "}",
-    // },
+    'asar': {
+      'unpack': "{" + [
+        '*.node',
+        '**/vendor/**',
+        'examples/**',
+        '**/src/tasks/**',
+        '**/node_modules/spellchecker/**',
+        '**/node_modules/windows-shortcuts/**',
+      ].join(',') + "}",
+    },
     'icon': path.resolve(grunt.option('appDir'), 'build', 'resources', 'mac', 'nylas.icns'),
     'ignore': [
+      // top level dirs we never want
+      '^[\\/]+apm',
+      '^[\\/]+arclib',
+      '^[\\/]+build',
+      '^[\\/]+electron',
+      '^[\\/]+flow-typed',
+      '^[\\/]+src[\\/]+pro',
+      '^[\\/]+spec_integration',
+
+      // general dirs we never want
+      '[\\/]+gh-pages$',
+      '[\\/]+docs$',
+      '[\\/]+obj[\\/]+gen',
+      '[\\/]+\\.deps$',
+
+      // specific files we never want
       '\\.DS_Store$',
-      '^/apm',
-      '^/arclib',
-      '^/build',
-      '/docs/',
-      '/gh-pages/',
-      '^/flow-typed',
-      '^/src/pro',
-      '^/spec_integration',
       '\\.jshintrc$',
       '\\.npmignore$',
       '\\.pairs$',
@@ -100,9 +104,20 @@ module.exports = (grunt) => {
       '\\.pdb$',
       '\\.cc$',
       '\\.h$',
+      '\\.d\\.ts$',
+      '\\.js\\.flow$',
+      '\\.map$',
       'binding\\.gyp$',
       'target\\.mk$',
       '\\.node\\.dYSM$',
+      'autoconf-\\d*\\.tar\\.gz$',
+
+      // specific (large) module bits we know we don't need
+      'node_modules[\\/]+less[\\/]+dist$',
+      'node_modules[\\/]+react[\\/]+dist$',
+      'node_modules[\\/].*[\\/]tests?$',
+      'node_modules[\\/].*[\\/]coverage$',
+      'node_modules[\\/].*[\\/]benchmark$',
       '@paulbetts[\\/]+cld[\\/]+deps[\\/]+cld',
     ],
     'out': path.resolve(grunt.option('appDir'), 'dist'),

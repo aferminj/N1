@@ -30,7 +30,6 @@
     "emoji-data": "^0.2.0",
     "enzyme": "^2.2.0",
     "event-kit": "^1.0.2",
-    "flow-bin": "0.33.0",
     "fs-plus": "^2.3.2",
     "guid": "0.0.10",
     "immutable": "3.7.5",
@@ -80,6 +79,7 @@
     "windows-shortcuts": "emorikawa/windows-shortcuts#b0a0fc7"
   },
   "devDependencies": {
+    "flow-bin": "0.33.0",
     "babel-core": "6.8.0",
     "babel-preset-electron": "^0.37.8",
     "babel-preset-react": "^6.16.0",

@@ -4,6 +4,15 @@
 const path = require('path');
 const safeExec = require('./utils/child-process-wrapper.js').safeExec;
 
+const electronNPMTargetEnv = {
+  'npm_config_target': '1.4.1',
+  'npm_config_arch': 'x64',
+  'npm_config_target_arch': 'x64',
+  'npm_config_disturl': 'https://atom.io/download/atom-shell',
+  'npm_config_runtime': 'electron',
+  'npm_config_build_from_source': true,
+};
+
 function runDevelopmentNPMInstall(callback) {
   safeExec('npm install', {
     cwd: path.resolve(__dirname, '..', 'build'),
@@ -14,14 +23,14 @@ function runDevelopmentNPMInstall(callback) {
 function runElectronNPMInstall(callback) {
   safeExec('npm install', {
     cwd: path.resolve(__dirname, '..'),
-    env: Object.assign(process.env, {
-      'npm_config_target': '1.4.1',
-      'npm_config_arch': 'x64',
-      'npm_config_target_arch': 'x64',
-      'npm_config_disturl': 'https://atom.io/download/atom-shell',
-      'npm_config_runtime': 'electron',
-      'npm_config_build_from_source': true,
-    }),
+    env: Object.assign(process.env, electronNPMTargetEnv),
+  }, callback);
+}
+
+function runElectronNPMDedupe(callback) {
+  safeExec('npm dedupe', {
+    cwd: path.resolve(__dirname, '..', 'build'),
+    env: Object.assign(process.env, electronNPMTargetEnv),
   }, callback);
 }
 
@@ -59,7 +68,10 @@ console.log("-- Running npm install for dev dependencies --")
 runDevelopmentNPMInstall(() => {
   console.log("-- Running npm install for app / Electron dependencies --")
   runElectronNPMInstall(() => {
-    console.log("-- Linking Nylas submodule resources --")
-    installProResources();
+    console.log("-- Running npm dedupe for app / Electron dependencies --")
+    runElectronNPMDedupe(() => {
+      console.log("-- Linking Nylas submodule resources --")
+      installProResources();
+    });
   });
 })
