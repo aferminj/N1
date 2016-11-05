@@ -13,7 +13,7 @@ module.exports = (grunt) => {
 
   // This allows all subsequent paths to the relative to the root of the repo
   const appDir = path.resolve('..');
-  const appPackageJSON = grunt.file.readJSON('package.json');
+  const appPackageJSON = grunt.file.readJSON('../package.json');
 
   grunt.file.setBase(appDir);
   grunt.option('appDir', appDir);
@@ -70,6 +70,7 @@ module.exports = (grunt) => {
         title: appPackageJSON.productName,
         authors: 'Nylas Inc.',
         exe: 'Nylas N1.exe',
+        name: 'Nylas',
       },
       ia32: {
         usePackageJson: false,
@@ -85,6 +86,7 @@ module.exports = (grunt) => {
         title: appPackageJSON.productName,
         authors: 'Nylas Inc.',
         exe: 'Nylas N1.exe',
+        name: 'Nylas',
       },
     },
 
