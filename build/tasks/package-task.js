@@ -1,4 +1,5 @@
-
+/* eslint prefer-template: 0 */
+/* eslint quote-props: 0 */
 const packager = require('electron-packager');
 const path = require('path');
 const tmpdir = path.resolve(require('os').tmpdir(), 'nylas-build');
@@ -6,7 +7,14 @@ const fs = require('fs-plus');
 const compile = require('electron-compile');
 
 module.exports = (grunt) => {
-  function runResolveSymlinks(buildPath, electronVersion, platform, arch, callback) {
+  function runCopyPlatformSpecificResources(buildPath, electronVersion, platform, arch, callback) {
+    if (platform === 'win32') {
+      fs.copySync(path.resolve(grunt.option('appDir'), 'build', 'resources', 'win'), buildPath);
+    }
+    callback();
+  }
+
+  function runCopySymlinkedPackages(buildPath, electronVersion, platform, arch, callback) {
     console.log(" -- Moving symlinked node modules / internal packages into build folder.")
 
     const dirs = [
@@ -53,10 +61,13 @@ module.exports = (grunt) => {
     });
   }
 
+  const platform = 'win32' // TODO process.platform
+
   const opts = {
+    'platform': platform,
     'dir': grunt.option('appDir'),
     'tmpdir': tmpdir,
-    'app-copyright': 'Copyright 2014-2016 Nylas',
+    'app-copyright': `Copyright (C) 2014-${new Date().getFullYear()} Nylas, Inc. All rights reserved.`,
     'derefSymlinks': false,
     'asar': {
       'unpack': "{" + [
@@ -68,7 +79,11 @@ module.exports = (grunt) => {
         '**/node_modules/windows-shortcuts/**',
       ].join(',') + "}",
     },
-    'icon': path.resolve(grunt.option('appDir'), 'build', 'resources', 'mac', 'nylas.icns'),
+    'icon': {
+      darwin: path.resolve(grunt.option('appDir'), 'build', 'resources', 'mac', 'nylas.icns'),
+      win32: path.resolve(grunt.option('appDir'), 'build', 'resources', 'win', 'nylas.ico'),
+      linux: undefined,
+    }[platform],
     'ignore': [
       // top level dirs we never want
       '^[\\/]+apm',
@@ -123,13 +138,22 @@ module.exports = (grunt) => {
     'out': path.resolve(grunt.option('appDir'), 'dist'),
     'overwrite': true,
     'prune': true,
+    'osx-sign': {
+      identity: 'Developer ID Application: InboxApp, Inc. (L6VLD5R29R)',
+    },
+    'win32metadata': {
+      CompanyName: 'Nylas, Inc.',
+      FileDescription: 'The best email app for people and teams at work',
+      LegalCopyright: `Copyright (C) 2014-${new Date().getFullYear()} Nylas, Inc. All rights reserved.`,
+      ProductName: 'Nylas N1',
+    },
     'extend-info': path.resolve(grunt.option('appDir'), 'build', 'resources', 'mac', 'nylas-Info.plist'),
     'extra-resource': [
       path.resolve(grunt.option('appDir'), 'build', 'resources', 'mac', 'Nylas Calendar.app'),
     ],
-
     'afterCopy': [
-      runResolveSymlinks,
+      runCopyPlatformSpecificResources,
+      runCopySymlinkedPackages,
       runElectronCompile,
     ],
   }

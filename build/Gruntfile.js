@@ -1,15 +1,20 @@
+/* eslint global-require: 0 */
 const path = require('path');
-const packageJson = require('../package.json');
 
-module.exports = function (grunt) {
+module.exports = (grunt) => {
+  const {shouldPublishBuild} = require('./tasks/task-helpers')(grunt);
+
   grunt.loadNpmTasks('grunt-coffeelint-cjsx');
   grunt.loadNpmTasks('grunt-lesslint');
   grunt.loadNpmTasks('grunt-contrib-csslint');
   grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-contrib-less');
+  grunt.loadNpmTasks('grunt-electron-installer')
 
   // This allows all subsequent paths to the relative to the root of the repo
   const appDir = path.resolve('..');
+  const appPackageJSON = grunt.file.readJSON('package.json');
+
   grunt.file.setBase(appDir);
   grunt.option('appDir', appDir);
 
@@ -48,9 +53,42 @@ module.exports = function (grunt) {
   ];
 
   grunt.initConfig({
-    pkg: grunt.file.readJSON('package.json'),
+    'pkg': appPackageJSON,
 
-    less: {
+    'create-windows-installer': {
+      x64: {
+        usePackageJson: false,
+        outputDirectory: path.join(grunt.option('appDir'), 'dist'),
+        appDirectory: path.join(grunt.option('appDir'), 'dist', 'Nylas N1-win32-ia32'),
+        loadingGif: path.join(grunt.option('appDir'), 'build', 'resources', 'win', 'loading.gif'),
+        setupIcon: path.join(grunt.option('appDir'), 'build', 'resources', 'win', 'nylas.ico'),
+        iconUrl: 'http://edgehill.s3.amazonaws.com/static/nylas.ico',
+        certificateFile: process.env.CERTIFICATE_FILE,
+        certificatePassword: process.env.WINDOWS_CODESIGN_KEY_PASSWORD,
+        description: appPackageJSON.description,
+        version: appPackageJSON.version,
+        title: appPackageJSON.productName,
+        authors: 'Nylas Inc.',
+        exe: 'Nylas N1.exe',
+      },
+      ia32: {
+        usePackageJson: false,
+        outputDirectory: path.join(grunt.option('appDir'), 'dist'),
+        appDirectory: path.join(grunt.option('appDir'), 'dist', 'Nylas N1-win32-ia32'),
+        loadingGif: path.join(grunt.option('appDir'), 'build', 'resources', 'win', 'loading.gif'),
+        setupIcon: path.join(grunt.option('appDir'), 'build', 'resources', 'win', 'nylas.ico'),
+        iconUrl: 'http://edgehill.s3.amazonaws.com/static/nylas.ico',
+        certificateFile: process.env.CERTIFICATE_FILE,
+        certificatePassword: process.env.WINDOWS_CODESIGN_KEY_PASSWORD,
+        description: appPackageJSON.description,
+        version: appPackageJSON.version,
+        title: appPackageJSON.productName,
+        authors: 'Nylas Inc.',
+        exe: 'Nylas N1.exe',
+      },
+    },
+
+    'less': {
       options: {
         paths: [
           'static/variables',
@@ -67,11 +105,11 @@ module.exports = function (grunt) {
       },
     },
 
-    nylaslint: {
+    'nylaslint': {
       src: COFFEE_SRC.concat(ES_SRC),
     },
 
-    coffeelint: {
+    'coffeelint': {
       'options': {
         configFile: 'build/config/coffeelint.json',
       },
@@ -91,7 +129,7 @@ module.exports = function (grunt) {
       'target': (grunt.option("target") ? grunt.option("target").split(" ") : []),
     },
 
-    eslint: {
+    'eslint': {
       options: {
         ignore: false,
         configFile: 'build/config/eslint.json',
@@ -99,11 +137,11 @@ module.exports = function (grunt) {
       target: ES_SRC,
     },
 
-    eslintFixer: {
+    'eslintFixer': {
       src: ES_SRC,
     },
 
-    csslint: {
+    'csslint': {
       options: {
         'adjoining-classes': false,
         'duplicate-background-images': false,
@@ -131,7 +169,7 @@ module.exports = function (grunt) {
       ],
     },
 
-    lesslint: {
+    'lesslint': {
       src: [
         'internal_packages/**/*.less',
         'dot-nylas/**/*.less',
@@ -142,8 +180,7 @@ module.exports = function (grunt) {
       },
     },
 
-    package: {
-
+    'packager': {
     },
   });
 
@@ -155,8 +192,10 @@ module.exports = function (grunt) {
 
 
   // Register CI Tasks
-  const {shouldPublishBuild} = require('./tasks/task-helpers')(grunt);
   const ciTasks = ['build'];
+  // if (process.platform === 'win32') {
+    ciTasks.push('create-windows-installer')
+  // }
   if (shouldPublishBuild()) {
     ciTasks.push('publish-nylas-build');
   }
