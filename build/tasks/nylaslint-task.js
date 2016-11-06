@@ -11,7 +11,13 @@ function normalizeRequirePath(requirePath, fPath) {
 
 
 module.exports = (grunt) => {
-  return grunt.registerMultiTask('nylaslint', 'Check requires for file extensions compiled away', () => {
+  grunt.config.merge({
+    nylaslint: {
+      src: grunt.config('source:coffeescript').concat(grunt.config('source:es6')),
+    },
+  });
+
+  grunt.registerMultiTask('nylaslint', 'Check requires for file extensions compiled away', () => {
     const done = this.async();
 
     // Enable once path errors are fixed.

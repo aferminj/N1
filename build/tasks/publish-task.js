@@ -1,6 +1,5 @@
 /* eslint global-require: 0 */
 /* eslint import/no-dynamic-require: 0 */
-const _ = require('underscore');
 const s3 = require('s3');
 const request = require('request');
 const Promise = require('bluebird');
@@ -22,8 +21,7 @@ module.exports = (grunt) => {
 
   const populateVersion = () =>
     new Promise((resolve, reject) => {
-      const packageJSONPath = path.join(grunt.config.get('nylasGruntConfig.appDir'), 'package.json');
-      const json = require(packageJSONPath);
+      const json = grunt.config.get('appJSON')
       const cmd = 'git';
       const args = ['rev-parse', '--short', 'HEAD'];
       return spawn({cmd, args}, (error, {stdout} = {}) => {
@@ -41,23 +39,6 @@ module.exports = (grunt) => {
       });
     })
   ;
-
-  function runEmailIntegrationTest() {
-    if (process.platform !== 'darwin') { return Promise.resolve(); }
-
-    const buildDir = grunt.config.get('nylasGruntConfig.buildDir');
-    return new Promise((resolve, reject) => {
-      const appToRun = path.join(buildDir, appName());
-      const scriptToRun = "./build/run-build-and-send-screenshot.scpt";
-      return spawn({
-        cmd: "osascript",
-        args: [scriptToRun, appToRun, fullVersion],
-      }
-      , (error) => {
-        return error ? reject(error) : resolve();
-      });
-    });
-  }
 
   function postToSlack(msg) {
     if (!process.env.NYLAS_INTERNAL_HOOK_URL) { return Promise.resolve(); }
@@ -86,8 +67,7 @@ module.exports = (grunt) => {
       ACL: "public-read",
       Bucket: "edgehill",
     };
-
-    _.extend(params, options);
+    Object.assign(params, options);
 
     return new Promise((resolve, reject) => {
       const uploader = s3Client.uploadFile({
@@ -108,8 +88,7 @@ module.exports = (grunt) => {
   }
 
   function uploadToS3(filename, key) {
-    const buildDir = grunt.config.get('nylasGruntConfig.buildDir');
-    const filepath = path.join(buildDir, filename);
+    const filepath = path.join(grunt.config.get('outputDir'), filename);
 
     grunt.log.writeln(`>> Uploading ${filename} to ${key}…`);
     return put(filepath, key).then((data) => {
@@ -119,18 +98,18 @@ module.exports = (grunt) => {
   }
 
   function uploadZipToS3(filenameToZip, key) {
-    const buildDir = grunt.config.get('nylasGruntConfig.buildDir');
+    const outputDir = grunt.config.get('outputDir');
     const buildZipFilename = `${filenameToZip}.zip`;
-    const buildZipPath = path.join(buildDir, buildZipFilename);
+    const buildZipPath = path.join(outputDir, buildZipFilename);
 
     grunt.log.writeln(">> Creating zip file…");
 
     return new Promise((resolve, reject) => {
       if (grunt.file.exists(buildZipPath)) { grunt.file.delete(buildZipPath, {force: true}); }
       const orig = process.cwd();
-      process.chdir(buildDir);
+      process.chdir(outputDir);
 
-      return spawn({
+      spawn({
         cmd: "zip",
         args: ["-9", "-y", "-r", buildZipPath, filenameToZip],
       }
@@ -168,14 +147,7 @@ module.exports = (grunt) => {
 
     const done = this.async();
 
-    return populateVersion()
-    .then(() => {
-      if (process.env.RUN_APPLE_SCRIPT_INTEGRATION) {
-        return runEmailIntegrationTest();
-      }
-      return Promise.resolve();
-    })
-    .then(() => {
+    return populateVersion().then(() => {
       const uploadPromises = [];
       if (process.platform === 'darwin') {
         uploadPromises.push(uploadZipToS3(appName(), `${fullVersion}/${process.platform}/${process.arch}/N1.zip`));
@@ -184,8 +156,8 @@ module.exports = (grunt) => {
         uploadPromises.push(uploadToS3(`installer/${winSetupName()}`, `${fullVersion}/${process.platform}/${process.arch}/N1Setup.exe`));
         uploadPromises.push(uploadToS3(`installer/${winNupkgName()}`, `${fullVersion}/${process.platform}/${process.arch}/${winNupkgName()}`));
       } else if (process.platform === 'linux') {
-        const buildDir = grunt.config.get('nylasGruntConfig.buildDir');
-        const files = fs.readdirSync(buildDir);
+        const outputDir = grunt.config.get('outputDir');
+        const files = fs.readdirSync(outputDir);
         for (const file of files) {
           if (path.extname(file) === '.deb') {
             uploadPromises.push(

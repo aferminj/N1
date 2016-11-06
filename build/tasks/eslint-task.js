@@ -2,21 +2,26 @@ const chalk = require('chalk');
 const eslint = require('eslint');
 
 module.exports = (grunt) => {
-  grunt.registerMultiTask('eslint', 'Validate files with ESLint', () => {
+  grunt.config.merge({
+    eslint: {
+      options: {
+        ignore: false,
+        configFile: 'build/config/eslint.json',
+      },
+      target: grunt.config('source:es6'),
+    },
+
+    eslintFixer: {
+      src: grunt.config('source:es6'),
+    },
+  });
+
+  grunt.registerMultiTask('eslint', 'Validate files with ESLint', function task() {
     const opts = this.options({
       outputFile: false,
       quiet: false,
       maxWarnings: -1,
     });
-
-    // legacy
-    // TODO: remove in the future
-    if (opts.config) {
-      opts.configFile = opts.config;
-    }
-    if (opts.rulesdir) {
-      opts.rulePaths = opts.rulesdir;
-    }
 
     if (this.filesSrc.length === 0) {
       grunt.log.writeln(chalk.magenta('Could not find any files to validate.'));
