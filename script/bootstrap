@@ -49,7 +49,7 @@ function installProResources() {
         fs.removeSync(p);
       }
     } catch (err) {
-      console.log(err);
+      // totally fine, just a non-existent file
     }
   }
 
