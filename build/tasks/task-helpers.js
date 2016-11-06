@@ -1,4 +1,4 @@
-const childProcess = require('child_process').childProcess;
+const childProcess = require('child_process');
 
 module.exports = (grunt) => {
   return {
@@ -12,7 +12,7 @@ module.exports = (grunt) => {
       proc.on('error', (processError) => {
         return error != null ? error : (error = processError)
       });
-      return proc.on('close', (exitCode, signal) => {
+      proc.on('close', (exitCode, signal) => {
         if (exitCode !== 0) { if (typeof error === 'undefined' || error === null) { error = new Error(signal); } }
         const results = {stderr: stderr.join(''), stdout: stdout.join(''), code: exitCode};
         if (exitCode !== 0) { grunt.log.error(results.stderr); }

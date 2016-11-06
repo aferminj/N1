@@ -14,11 +14,6 @@ let fullVersion = null;
 module.exports = (grunt) => {
   const {shouldPublishBuild, spawn} = require('./task-helpers')(grunt);
 
-  const appName = () => grunt.config.get('nylasGruntConfig.appName');
-  const winReleasesName = () => "RELEASES";
-  const winSetupName = () => "Nylas N1Setup.exe";
-  const winNupkgName = () => `nylas-${packageVersion}-full.nupkg`;
-
   const populateVersion = () =>
     new Promise((resolve, reject) => {
       const json = grunt.config.get('appJSON')
@@ -97,34 +92,6 @@ module.exports = (grunt) => {
     });
   }
 
-  function uploadZipToS3(filenameToZip, key) {
-    const outputDir = grunt.config.get('outputDir');
-    const buildZipFilename = `${filenameToZip}.zip`;
-    const buildZipPath = path.join(outputDir, buildZipFilename);
-
-    grunt.log.writeln(">> Creating zip file…");
-
-    return new Promise((resolve, reject) => {
-      if (grunt.file.exists(buildZipPath)) { grunt.file.delete(buildZipPath, {force: true}); }
-      const orig = process.cwd();
-      process.chdir(outputDir);
-
-      spawn({
-        cmd: "zip",
-        args: ["-9", "-y", "-r", buildZipPath, filenameToZip],
-      }
-      , (error) => {
-        process.chdir(orig);
-        if (error) {
-          return reject(error);
-        }
-
-        grunt.log.writeln(`>> Created ${buildZipPath}`);
-        return uploadToS3(buildZipFilename, key).then(resolve).catch(reject);
-      });
-    });
-  }
-
   grunt.registerTask("publish-nylas-build", "Publish Nylas build", () => {
     if (!shouldPublishBuild()) { return Promise.resolve(); }
 
@@ -149,14 +116,15 @@ module.exports = (grunt) => {
 
     return populateVersion().then(() => {
       const uploadPromises = [];
+      const outputDir = grunt.config.get('outputDir');
+
       if (process.platform === 'darwin') {
-        uploadPromises.push(uploadZipToS3(appName(), `${fullVersion}/${process.platform}/${process.arch}/N1.zip`));
+        uploadPromises.push(uploadToS3(`${outputDir}/N1.zip`, `${fullVersion}/${process.platform}/${process.arch}/N1.zip`));
       } else if (process.platform === 'win32') {
-        uploadPromises.push(uploadToS3(`installer/${winReleasesName()}`, `${fullVersion}/${process.platform}/${process.arch}/RELEASES`));
-        uploadPromises.push(uploadToS3(`installer/${winSetupName()}`, `${fullVersion}/${process.platform}/${process.arch}/N1Setup.exe`));
-        uploadPromises.push(uploadToS3(`installer/${winNupkgName()}`, `${fullVersion}/${process.platform}/${process.arch}/${winNupkgName()}`));
+        uploadPromises.push(uploadToS3(`${outputDir}/RELEASES`, `${fullVersion}/${process.platform}/${process.arch}/RELEASES`));
+        uploadPromises.push(uploadToS3(`${outputDir}/Nylas N1Setup.exe`, `${fullVersion}/${process.platform}/${process.arch}/N1Setup.exe`));
+        uploadPromises.push(uploadToS3(`${outputDir}/nylas-${packageVersion}-full.nupkg`, `${fullVersion}/${process.platform}/${process.arch}/nylas-${packageVersion}-full.nupkg`));
       } else if (process.platform === 'linux') {
-        const outputDir = grunt.config.get('outputDir');
         const files = fs.readdirSync(outputDir);
         for (const file of files) {
           if (path.extname(file) === '.deb') {
