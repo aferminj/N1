@@ -12,14 +12,14 @@ let packageVersion = null;
 let fullVersion = null;
 
 module.exports = (grunt) => {
-  const {shouldPublishBuild, spawn} = require('./task-helpers')(grunt);
+  const {spawn} = require('./task-helpers')(grunt);
 
-  const populateVersion = () =>
-    new Promise((resolve, reject) => {
+  function populateVersion() {
+    return new Promise((resolve, reject) => {
       const json = grunt.config.get('appJSON')
       const cmd = 'git';
       const args = ['rev-parse', '--short', 'HEAD'];
-      return spawn({cmd, args}, (error, {stdout} = {}) => {
+      spawn({cmd, args}, (error, {stdout} = {}) => {
         if (error) {
           return reject();
         }
@@ -32,11 +32,13 @@ module.exports = (grunt) => {
         }
         return resolve();
       });
-    })
-  ;
+    });
+  }
 
   function postToSlack(msg) {
-    if (!process.env.NYLAS_INTERNAL_HOOK_URL) { return Promise.resolve(); }
+    if (!process.env.NYLAS_INTERNAL_HOOK_URL) {
+      return Promise.resolve();
+    }
     return new Promise((resolve, reject) =>
       request.post({
         url: process.env.NYLAS_INTERNAL_HOOK_URL,
@@ -92,60 +94,81 @@ module.exports = (grunt) => {
     });
   }
 
-  grunt.registerTask("publish-nylas-build", "Publish Nylas build", () => {
-    if (!shouldPublishBuild()) { return Promise.resolve(); }
-
-    const awsKey = process.env.AWS_ACCESS_KEY_ID != null ? process.env.AWS_ACCESS_KEY_ID : "";
-    const awsSecret = process.env.AWS_SECRET_ACCESS_KEY != null ? process.env.AWS_SECRET_ACCESS_KEY : "";
-
-    if (awsKey.length === 0) {
-      grunt.fail.fatal("Please set the AWS_ACCESS_KEY_ID environment variable");
-    }
-    if (awsSecret.length === 0) {
-      grunt.fail.fatal("Please set the AWS_SECRET_ACCESS_KEY environment variable");
-    }
-
-    s3Client = s3.createClient({
-      s3Options: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        scretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      },
-    });
-
+  grunt.registerTask("publish", "Publish Nylas build", function publish() {
     const done = this.async();
 
-    return populateVersion().then(() => {
-      const uploadPromises = [];
+    populateVersion().then(() => {
+      // find files to publish
+      const {shouldPublishBuild} = require('./task-helpers')(grunt);
       const outputDir = grunt.config.get('outputDir');
+      const uploads = [];
 
       if (process.platform === 'darwin') {
-        uploadPromises.push(uploadToS3(`${outputDir}/N1.zip`, `${fullVersion}/${process.platform}/${process.arch}/N1.zip`));
+        uploads.push({
+          source: `${outputDir}/N1.zip`,
+          key: `${fullVersion}/${process.platform}/${process.arch}/N1.zip`,
+        });
       } else if (process.platform === 'win32') {
-        uploadPromises.push(uploadToS3(`${outputDir}/RELEASES`, `${fullVersion}/${process.platform}/${process.arch}/RELEASES`));
-        uploadPromises.push(uploadToS3(`${outputDir}/Nylas N1Setup.exe`, `${fullVersion}/${process.platform}/${process.arch}/N1Setup.exe`));
-        uploadPromises.push(uploadToS3(`${outputDir}/nylas-${packageVersion}-full.nupkg`, `${fullVersion}/${process.platform}/${process.arch}/nylas-${packageVersion}-full.nupkg`));
+        uploads.push({
+          source: `${outputDir}/RELEASES`,
+          key: `${fullVersion}/${process.platform}/${process.arch}/RELEASES`,
+        });
+        uploads.push({
+          source: `${outputDir}/Nylas N1Setup.exe`,
+          key: `${fullVersion}/${process.platform}/${process.arch}/N1Setup.exe`,
+        });
+        uploads.push({
+          source: `${outputDir}/nylas-${packageVersion}-full.nupkg`,
+          key: `${fullVersion}/${process.platform}/${process.arch}/nylas-${packageVersion}-full.nupkg`,
+        });
       } else if (process.platform === 'linux') {
         const files = fs.readdirSync(outputDir);
         for (const file of files) {
           if (path.extname(file) === '.deb') {
-            uploadPromises.push(
-              uploadToS3(file, `${fullVersion}/${process.platform}-deb/${process.arch}/N1.deb`, {ContentType: "application/x-deb"})
-            );
+            uploads.push({
+              source: file,
+              key: `${fullVersion}/${process.platform}-deb/${process.arch}/N1.deb`,
+              options: {ContentType: "application/x-deb"},
+            });
           }
           if (path.extname(file) === '.rpm') {
-            uploadPromises.push(
-              uploadToS3(file, `${fullVersion}/${process.platform}-rpm/${process.arch}/N1.rpm`, {ContentType: "application/x-rpm"})
-            );
+            uploads.push({
+              source: file,
+              key: `${fullVersion}/${process.platform}-rpm/${process.arch}/N1.rpm`,
+              options: {ContentType: "application/x-rpm"},
+            });
           }
         }
       } else {
         grunt.fail.fatal(`Unsupported platform: '${process.platform}'`);
       }
 
-      return Promise.all(uploadPromises).then(done).catch((err) => {
-        grunt.log.error(err);
-        return false;
+      // configure environment
+      if (!shouldPublishBuild()) {
+        grunt.log.writeln(`>> Not publishing builds…`);
+        grunt.log.writeln(`>> Would have uploaded the following assets: ${JSON.stringify(uploads, null, 2)}`);
+        return;
+      }
+      const awsKey = process.env.AWS_ACCESS_KEY_ID != null ? process.env.AWS_ACCESS_KEY_ID : "";
+      const awsSecret = process.env.AWS_SECRET_ACCESS_KEY != null ? process.env.AWS_SECRET_ACCESS_KEY : "";
+
+      if (awsKey.length === 0) {
+        grunt.fail.fatal("Please set the AWS_ACCESS_KEY_ID environment variable");
+      }
+      if (awsSecret.length === 0) {
+        grunt.fail.fatal("Please set the AWS_SECRET_ACCESS_KEY environment variable");
+      }
+
+      s3Client = s3.createClient({
+        s3Options: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+          scretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        },
       });
+
+      Promise.all(uploads.map(({source, key, options}) =>
+        uploadToS3(source, key, options))
+      ).then(done, done);
     });
   });
 }
