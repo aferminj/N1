@@ -68,6 +68,19 @@ module.exports = (grunt) => {
       'platform': platform,
       'dir': grunt.config('appDir'),
       'tmpdir': tmpdir,
+      'arch': {
+        'win32': 'ia32',
+      }[platform],
+      'icon': {
+        darwin: path.resolve(grunt.config('appDir'), 'build', 'resources', 'mac', 'nylas.icns'),
+        win32: path.resolve(grunt.config('appDir'), 'build', 'resources', 'win', 'nylas.ico'),
+        linux: undefined,
+      }[platform],
+      'name': {
+        darwin: 'Nylas N1',
+        win32: 'nylas',
+        linux: 'nylas',
+      }[platform],
       'app-copyright': `Copyright (C) 2014-${new Date().getFullYear()} Nylas, Inc. All rights reserved.`,
       'derefSymlinks': false,
       'asar': {
@@ -80,11 +93,6 @@ module.exports = (grunt) => {
           '**/node_modules/windows-shortcuts/**',
         ].join(',') + "}",
       },
-      'icon': {
-        darwin: path.resolve(grunt.config('appDir'), 'build', 'resources', 'mac', 'nylas.icns'),
-        win32: path.resolve(grunt.config('appDir'), 'build', 'resources', 'win', 'nylas.ico'),
-        linux: undefined,
-      }[platform],
       'ignore': [
         // top level dirs we never want
         '^[\\/]+apm',

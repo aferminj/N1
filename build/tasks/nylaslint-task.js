@@ -17,7 +17,7 @@ module.exports = (grunt) => {
     },
   });
 
-  grunt.registerMultiTask('nylaslint', 'Check requires for file extensions compiled away', () => {
+  grunt.registerMultiTask('nylaslint', 'Check requires for file extensions compiled away', function nylaslint() {
     const done = this.async();
 
     // Enable once path errors are fixed.

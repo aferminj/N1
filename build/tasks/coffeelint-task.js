@@ -7,7 +7,6 @@ module.exports = (grunt) => {
       'src': grunt.config('source:coffeescript'),
       'build': [
         'build/tasks/**/*.coffee',
-        'build/Gruntfile.js',
       ],
       'test': [
         'spec/**/*.cjsx',
