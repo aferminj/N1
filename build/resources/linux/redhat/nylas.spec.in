@@ -17,9 +17,6 @@ cp -r <%= contentsDir %>/* %{buildroot}<%= linuxShareDir %>
 
 mkdir -p %{buildroot}<%= linuxBinDir %>/
 
-cp N1.sh %{buildroot}<%= linuxBinDir %>/<%= appFileName %>
-chmod 755 %{buildroot}<%= linuxBinDir %>/<%= appFileName %>
-
 mkdir -p %{buildroot}/usr/local/share/applications/
 mv nylas.desktop %{buildroot}/usr/local/share/applications/
 
