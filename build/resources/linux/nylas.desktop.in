@@ -1,9 +1,9 @@
 [Desktop Entry]
-Name=Nylas N1
+Name=<%= appName %>
 Comment=<%= description %>
-GenericName=Nylas N1
-Exec=<%= linuxShareDir %>/<%= appFileName %> %U
-Icon=<%= iconName %>
+GenericName=<%= appName %>
+Exec=/usr/local/share/nylas/nylas %U
+Icon=nylas
 Type=Application
 StartupNotify=true
 StartupWMClass=Nylas N1

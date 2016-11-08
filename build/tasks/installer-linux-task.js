@@ -6,8 +6,6 @@ const _ = require('underscore');
 module.exports = (grunt) => {
   const {spawn} = require('./task-helpers')(grunt);
 
-  const appFileName = 'nylas';
-  const iconName = 'nylas'
   const outputDir = grunt.config.get('outputDir');
   const contentsDir = path.join(grunt.config('outputDir'), `nylas-linux-${process.arch}`);
   const linuxAssetsDir = path.join('build', 'resources', 'linux');
@@ -47,16 +45,12 @@ module.exports = (grunt) => {
     }
 
     const templateData = {
+      name: 'nylas',
       version: grunt.config('appJSON').version,
       description: grunt.config('appJSON').description,
       appName: grunt.config('appJSON').name,
-      name: 'nylas',
-      iconName: iconName,
-      linuxBinDir: '/usr/local/bin',
-      linuxShareDir: '/usr/local/share/nylas',
-      appFileName: appFileName,
+      linuxAssetsDir: linuxAssetsDir,
       contentsDir: contentsDir,
-      buildDir: outputDir,
     }
 
     // This populates nylas.spec
@@ -70,7 +64,7 @@ module.exports = (grunt) => {
     fillTemplate(desktopInFilePath, templateData, desktopOutFilePath)
 
     const cmd = path.join('script', 'mkrpm')
-    const args = [specOutFilePath, desktopOutFilePath, outputDir, contentsDir, appFileName, linuxAssetsDir]
+    const args = [specOutFilePath, desktopOutFilePath, outputDir, contentsDir, linuxAssetsDir]
     spawn({cmd, args}, (error) => {
       if (error) {
         return done(error);
@@ -92,16 +86,13 @@ module.exports = (grunt) => {
     const maintainer = 'Nylas Team <support@nylas.com>'
     const installDir = '/usr'
 
-    // NOTE: For Debian packages we use /usr/share instead of /usr/local/share
-    const linuxShareDir = path.join(installDir, "share", appFileName)
-
     getInstalledSize(contentsDir, (error, installedSize) => {
       if (error) {
         done(error);
         return;
       }
 
-      const data = {name, version, description, section, arch, maintainer, installDir, iconName, installedSize, appFileName, linuxShareDir}
+      const data = {name, version, description, section, arch, maintainer, installDir, installedSize}
       const controlFilePath = fillTemplate(path.join(linuxAssetsDir, 'debian', 'control.in'), data)
       const desktopFilePath = fillTemplate(path.join(linuxAssetsDir, 'nylas.desktop.in'), data)
       const icon = path.join('build', 'resources', 'nylas.png')
