@@ -47,9 +47,9 @@ module.exports = (grunt) => {
     }
 
     const templateData = {
-      version: grunt.config('packageJSON').version,
-      description: grunt.config('packageJSON').description,
-      appName: grunt.config('packageJSON').name,
+      version: grunt.config('appJSON').version,
+      description: grunt.config('appJSON').description,
+      appName: grunt.config('appJSON').name,
       name: 'nylas',
       iconName: iconName,
       linuxBinDir: '/usr/local/bin',
