@@ -18,7 +18,7 @@ module.exports = (grunt) => {
 
   const fillTemplate = (filePath, data, outputPath) => {
     const template = _.template(String(fs.readFileSync(filePath)))
-    const finishedPath = outputPath || path.join(outputDir, path.basename(filePath));
+    const finishedPath = outputPath || path.join(outputDir, path.basename(filePath).replace('.in', ''));
     grunt.file.write(finishedPath, template(data));
     return finishedPath;
   }
@@ -56,16 +56,14 @@ module.exports = (grunt) => {
 
     // This populates nylas.spec
     const specInFilePath = path.join(linuxAssetsDir, 'redhat', 'nylas.spec.in')
-    const specOutFilePath = path.join(outputDir, 'nylas.spec')
-    fillTemplate(specInFilePath, templateData, specOutFilePath)
+    fillTemplate(specInFilePath, templateData)
 
     // This populates nylas.desktop
     const desktopInFilePath = path.join(linuxAssetsDir, 'nylas.desktop.in')
-    const desktopOutFilePath = path.join(outputDir, 'nylas.desktop')
-    fillTemplate(desktopInFilePath, templateData, desktopOutFilePath)
+    fillTemplate(desktopInFilePath, templateData)
 
     const cmd = path.join('script', 'mkrpm')
-    const args = [specOutFilePath, desktopOutFilePath, outputDir, contentsDir, linuxAssetsDir]
+    const args = [outputDir, contentsDir, linuxAssetsDir]
     spawn({cmd, args}, (error) => {
       if (error) {
         return done(error);
@@ -105,7 +103,7 @@ module.exports = (grunt) => {
       const icon = path.join('build', 'resources', 'nylas.png')
 
       const cmd = path.join('script', 'mkdeb');
-      const args = [version, arch, controlFilePath, desktopFilePath, icon, linuxAssetsDir, contentsDir, outputDir];
+      const args = [version, arch, icon, linuxAssetsDir, contentsDir, outputDir];
       spawn({cmd, args}, (spawnError) => {
         if (spawnError) {
           return done(spawnError);

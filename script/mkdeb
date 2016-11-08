@@ -9,12 +9,10 @@ cd $ROOT
 
 VERSION="$1"
 ARCH="$2"
-CONTROL_FILE="$3"
-DESKTOP_FILE="$4"
-ICON_FILE="$5"
-LINUX_ASSETS_DIRECTORY="$6"
-APP_PATH="$7"
-OUTPUT_PATH="$8"
+ICON_FILE="$3"
+LINUX_ASSETS_DIRECTORY="$4"
+APP_CONTENTS_DIRECTORY="$5"
+OUTPUT_PATH="$6"
 
 FILE_MODE=755
 
@@ -24,10 +22,10 @@ TARGET="$TARGET_ROOT/nylas-$VERSION-$ARCH"
 
 mkdir -m $FILE_MODE -p "$TARGET/usr"
 mkdir -m $FILE_MODE -p "$TARGET/usr/share"
-cp -r "$APP_PATH" "$TARGET/usr/share/nylas"
+cp -r "$APP_CONTENTS_DIRECTORY" "$TARGET/usr/share/nylas"
 
 mkdir -m $FILE_MODE -p "$TARGET/DEBIAN"
-cp "$CONTROL_FILE" "$TARGET/DEBIAN/control"
+cp "$OUTPUT_PATH/control" "$TARGET/DEBIAN/control"
 
 cp "$LINUX_ASSETS_DIRECTORY/debian/postinst" "$TARGET/DEBIAN/postinst"
 cp "$LINUX_ASSETS_DIRECTORY/debian/postrm" "$TARGET/DEBIAN/postrm"
@@ -37,7 +35,7 @@ cp "$LINUX_ASSETS_DIRECTORY/nylas.sh" "$TARGET/usr/bin/nylas"
 chmod +x "$TARGET/usr/bin/nylas"
 
 mkdir -m $FILE_MODE -p "$TARGET/usr/share/applications"
-cp "$DESKTOP_FILE" "$TARGET/usr/share/applications"
+cp "$OUTPUT_PATH/nylas.desktop" "$TARGET/usr/share/applications"
 
 mkdir -m $FILE_MODE -p "$TARGET/usr/share/pixmaps"
 cp "$ICON_FILE" "$TARGET/usr/share/pixmaps"
