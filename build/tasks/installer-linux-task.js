@@ -8,7 +8,7 @@ module.exports = (grunt) => {
 
   const outputDir = grunt.config.get('outputDir');
   const contentsDir = path.join(grunt.config('outputDir'), `nylas-linux-${process.arch}`);
-  const linuxAssetsDir = path.join('build', 'resources', 'linux');
+  const linuxAssetsDir = path.resolve(path.join('resources', 'linux'));
   const arch = {
     ia32: 'i386',
     x64: 'amd64',
