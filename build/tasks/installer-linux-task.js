@@ -45,10 +45,10 @@ module.exports = (grunt) => {
     }
 
     const templateData = {
-      name: 'nylas',
+      name: grunt.config('appJSON').name,
       version: grunt.config('appJSON').version,
       description: grunt.config('appJSON').description,
-      appName: grunt.config('appJSON').name,
+      productName: grunt.config('appJSON').productName,
       linuxAssetsDir: linuxAssetsDir,
       contentsDir: contentsDir,
     }
@@ -89,10 +89,10 @@ module.exports = (grunt) => {
 
       const version = grunt.config('appJSON').version;
       const data = {
-        name: 'nylas',
         version: version,
+        name: grunt.config('appJSON').name,
         description: grunt.config('appJSON').description,
-        appName: grunt.config('appJSON').name,
+        productName: grunt.config('appJSON').productName,
         arch: arch,
         section: 'devel',
         maintainer: 'Nylas Team <support@nylas.com>',
