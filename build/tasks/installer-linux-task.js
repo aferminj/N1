@@ -19,7 +19,7 @@ module.exports = (grunt) => {
   // a few helpers
 
   const fillTemplate = (filePath, data, outputPath) => {
-    const template = _.template(String(fs.readFileSync(`${filePath}.in`)))
+    const template = _.template(String(fs.readFileSync(filePath)))
     const finishedPath = outputPath || path.join(outputDir, path.basename(filePath));
     grunt.file.write(finishedPath, template(data));
     return finishedPath;

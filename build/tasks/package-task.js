@@ -9,7 +9,10 @@ const compile = require('electron-compile');
 module.exports = (grunt) => {
   function runCopyPlatformSpecificResources(buildPath, electronVersion, platform, arch, callback) {
     if (platform === 'win32') {
-      fs.copySync(path.resolve(grunt.config('appDir'), 'build', 'resources', 'win'), buildPath);
+      // these files (like nylas-mailto-default.reg) go alongside the ASAR, not inside it,
+      // so we need to move out of the `app` directory.
+      const resourcesDir = path.resolve(buildPath, '..');
+      fs.copySync(path.resolve(grunt.config('appDir'), 'build', 'resources', 'win'), resourcesDir);
     }
     callback();
   }
