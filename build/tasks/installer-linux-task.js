@@ -81,18 +81,23 @@ module.exports = (grunt) => {
       return;
     }
 
-    const {name, version, description} = grunt.file.readJSON('package.json')
-    const section = 'devel'
-    const maintainer = 'Nylas Team <support@nylas.com>'
-    const installDir = '/usr'
-
     getInstalledSize(contentsDir, (error, installedSize) => {
       if (error) {
         done(error);
         return;
       }
 
-      const data = {name, version, description, section, arch, maintainer, installDir, installedSize}
+      const version = grunt.config('appJSON').version;
+      const data = {
+        name: 'nylas',
+        version: version,
+        description: grunt.config('appJSON').description,
+        appName: grunt.config('appJSON').name,
+        arch: arch,
+        section: 'devel',
+        maintainer: 'Nylas Team <support@nylas.com>',
+        installedSize: installedSize,
+      }
       const controlFilePath = fillTemplate(path.join(linuxAssetsDir, 'debian', 'control.in'), data)
       const desktopFilePath = fillTemplate(path.join(linuxAssetsDir, 'nylas.desktop.in'), data)
       const icon = path.join('build', 'resources', 'nylas.png')
