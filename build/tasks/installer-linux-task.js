@@ -70,7 +70,7 @@ module.exports = (grunt) => {
     fillTemplate(desktopInFilePath, templateData, desktopOutFilePath)
 
     const cmd = path.join('script', 'mkrpm')
-    const args = [specOutFilePath, desktopOutFilePath, outputDir, contentsDir, appFileName]
+    const args = [specOutFilePath, desktopOutFilePath, outputDir, contentsDir, appFileName, linuxAssetsDir]
     spawn({cmd, args}, (error) => {
       if (error) {
         return done(error);
@@ -107,7 +107,7 @@ module.exports = (grunt) => {
       const icon = path.join('build', 'resources', 'nylas.png')
 
       const cmd = path.join('script', 'mkdeb');
-      const args = [version, arch, controlFilePath, desktopFilePath, icon, path.join(linuxAssetsDir), contentsDir, outputDir];
+      const args = [version, arch, controlFilePath, desktopFilePath, icon, linuxAssetsDir, contentsDir, outputDir];
       spawn({cmd, args}, (spawnError) => {
         if (spawnError) {
           return done(spawnError);
