@@ -7,3 +7,4 @@ Architecture: <%= arch %>
 Installed-Size: <%= installedSize %>
 Maintainer: <%= maintainer %>
 Description: <%= description %>
+ <%= description %>
