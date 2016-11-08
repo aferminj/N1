@@ -104,12 +104,10 @@ module.exports = (grunt) => {
       const data = {name, version, description, section, arch, maintainer, installDir, iconName, installedSize, appFileName, linuxShareDir}
       const controlFilePath = fillTemplate(path.join(linuxAssetsDir, 'debian', 'control.in'), data)
       const desktopFilePath = fillTemplate(path.join(linuxAssetsDir, 'nylas.desktop.in'), data)
-      const postinstFilePath = path.join(linuxAssetsDir, 'debian', 'postinst')
-      const postrmFilePath = path.join(linuxAssetsDir, 'debian', 'postrm')
       const icon = path.join('build', 'resources', 'nylas.png')
 
       const cmd = path.join('script', 'mkdeb');
-      const args = [version, arch, controlFilePath, desktopFilePath, icon, postinstFilePath, postrmFilePath, outputDir, contentsDir];
+      const args = [version, arch, controlFilePath, desktopFilePath, icon, path.join(linuxAssetsDir), contentsDir, outputDir];
       spawn({cmd, args}, (spawnError) => {
         if (spawnError) {
           return done(spawnError);
