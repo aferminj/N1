@@ -109,7 +109,7 @@ module.exports = (grunt) => {
       const icon = path.join('build', 'resources', 'nylas.png')
 
       const cmd = path.join('script', 'mkdeb');
-      const args = [version, arch, controlFilePath, desktopFilePath, icon, postinstFilePath, postrmFilePath, outputDir];
+      const args = [version, arch, controlFilePath, desktopFilePath, icon, postinstFilePath, postrmFilePath, outputDir, contentsDir];
       spawn({cmd, args}, (spawnError) => {
         if (spawnError) {
           return done(spawnError);

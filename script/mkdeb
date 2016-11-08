@@ -15,6 +15,7 @@ ICON_FILE="$5"
 POSTINST_FILE="$6"
 POSTRM_FILE="$7"
 DEB_PATH="$8"
+APP_PATH="$9"
 FILE_MODE=755
 
 TARGET_ROOT="`mktemp -d`"
@@ -22,6 +23,7 @@ chmod $FILE_MODE "$TARGET_ROOT"
 TARGET="$TARGET_ROOT/nylas-$VERSION-$ARCH"
 
 mkdir -m $FILE_MODE -p "$TARGET/usr"
+cp "$APP_PATH" "$TARGET/usr/nylas"
 env INSTALL_PREFIX="$TARGET/usr" script/grunt install
 
 mkdir -m $FILE_MODE -p "$TARGET/DEBIAN"
