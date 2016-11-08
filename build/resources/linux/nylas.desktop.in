@@ -2,7 +2,7 @@
 Name=<%= productName %>
 Comment=<%= description %>
 GenericName=<%= productName %>
-Exec=/usr/local/share/nylas/nylas %U
+Exec=<%= linuxShareDir %>/nylas %U
 Icon=nylas
 Type=Application
 StartupNotify=true

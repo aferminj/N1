@@ -49,6 +49,7 @@ module.exports = (grunt) => {
       version: grunt.config('appJSON').version,
       description: grunt.config('appJSON').description,
       productName: grunt.config('appJSON').productName,
+      linuxShareDir: '/usr/local/share/nylas',
       linuxAssetsDir: linuxAssetsDir,
       contentsDir: contentsDir,
     }
@@ -93,6 +94,7 @@ module.exports = (grunt) => {
         name: grunt.config('appJSON').name,
         description: grunt.config('appJSON').description,
         productName: grunt.config('appJSON').productName,
+        linuxShareDir: '/usr/share/nylas',
         arch: arch,
         section: 'devel',
         maintainer: 'Nylas Team <support@nylas.com>',
