@@ -4,37 +4,39 @@
 const path = require('path');
 const safeExec = require('./utils/child-process-wrapper.js').safeExec;
 
-const electronNPMTargetEnv = {
-  'npm_config_target': '1.4.1',
-  'npm_config_arch': 'x64',
-  'npm_config_target_arch': 'x64',
-  'npm_config_disturl': 'https://atom.io/download/atom-shell',
-  'npm_config_runtime': 'electron',
-  'npm_config_build_from_source': true,
+const npmEnvs = {
+  system: process.env,
+  apm: Object.assign({}, process.env, {
+    'npm_config_target': '0.10.40',
+  }),
+  electron: Object.assign({}, process.env, {
+    'npm_config_target': '1.4.1',
+    'npm_config_arch': 'x64',
+    'npm_config_target_arch': 'x64',
+    'npm_config_disturl': 'https://atom.io/download/atom-shell',
+    'npm_config_runtime': 'electron',
+    'npm_config_build_from_source': true,
+  }),
 };
 
-function runDevelopmentNPMInstall(callback) {
-  safeExec('npm install', {
-    cwd: path.resolve(__dirname, '..', 'build'),
-    env: process.env,
-  }, callback);
-}
+function npm(cmd, options) {
+  const {cwd, env} = Object.assign({cwd: '.', env: 'system'}, options);
 
-function runElectronNPMInstall(callback) {
-  safeExec('npm install', {
-    cwd: path.resolve(__dirname, '..'),
-    env: Object.assign(process.env, electronNPMTargetEnv),
-  }, callback);
-}
+  return new Promise((resolve, reject) => {
+    console.log(`\n-- Running npm ${cmd} in ./${cwd} with ${env} config --`)
 
-function runElectronNPMDedupe(callback) {
-  safeExec('npm dedupe', {
-    cwd: path.resolve(__dirname, '..', 'build'),
-    env: Object.assign(process.env, electronNPMTargetEnv),
-  }, callback);
+    safeExec(`npm ${cmd}`, {
+      cwd: path.resolve(__dirname, '..', cwd),
+      env: npmEnvs[env],
+    }, (err) => {
+      return err ? reject(err) : resolve(null);
+    });
+  });
 }
 
 function installProResources() {
+  console.log("\n-- Linking Nylas submodule resources --")
+
   const fs = require('fs-plus');
   const proDir = path.resolve(path.join('src', 'pro'))
   const canaryFileExists = fs.existsSync(path.join(proDir, "README.md"))
@@ -44,13 +46,7 @@ function installProResources() {
   }
 
   const unlinkIfExistsSync = (p) => {
-    try {
-      if (fs.lstatSync(p)) {
-        fs.removeSync(p);
-      }
-    } catch (err) {
-      // totally fine, just a non-existent file
-    }
+    try { if (fs.lstatSync(p)) { fs.removeSync(p); } } catch (err) { return }
   }
 
   // copy Arc Files
@@ -69,14 +65,9 @@ function installProResources() {
   }
 }
 
-console.log("-- Running npm install for dev dependencies --")
-runDevelopmentNPMInstall(() => {
-  console.log("-- Running npm install for app / Electron dependencies --")
-  runElectronNPMInstall(() => {
-    console.log("-- Running npm dedupe for app / Electron dependencies --")
-    runElectronNPMDedupe(() => {
-      console.log("-- Linking Nylas submodule resources --")
-      installProResources();
-    });
-  });
-})
+npm('install', {cwd: 'build'})
+.then(() => npm('install', {cwd: 'apm', env: 'apm'}))
+.then(() => npm('dedupe', {cwd: path.join('apm', 'node_modules', 'npm'), env: 'apm'}))
+.then(() => npm('install', {cwd: '.', env: 'electron'}))
+.then(() => npm('dedupe', {cwd: '.', env: 'electron'}))
+.then(() => installProResources())

@@ -7,11 +7,32 @@ const fs = require('fs-plus');
 const compile = require('electron-compile');
 
 module.exports = (grunt) => {
+  function runCopyAPM(buildPath, electronVersion, platform, arch, callback) {
+    // Move APM up out of the /app folder which will be inside the ASAR
+    const apmTargetDir = path.resolve(buildPath, '..', 'apm');
+    fs.moveSync(path.join(buildPath, 'apm'), apmTargetDir)
+
+    // Move /apm/node_modules/atom-package-manager up a level. We're essentially
+    // pulling the atom-package-manager module up outside of the node_modules folder,
+    // which is necessary because npmV3 installs nested dependencies in the same dir.
+    const apmPackageDir = path.join(apmTargetDir, 'node_modules', 'atom-package-manager')
+    for (const name of fs.readdirSync(apmPackageDir)) {
+      fs.renameSync(path.join(apmPackageDir, name), path.join(apmTargetDir, name));
+    }
+
+    const apmSymlink = path.join(apmTargetDir, 'node_modules', '.bin', 'apm');
+    if (fs.existsSync(apmSymlink)) {
+      fs.unlinkSync(apmSymlink);
+    }
+    fs.rmdirSync(apmPackageDir);
+    callback();
+  }
+
   function runCopyPlatformSpecificResources(buildPath, electronVersion, platform, arch, callback) {
+    // these files (like nylas-mailto-default.reg) go alongside the ASAR, not inside it,
+    // so we need to move out of the `app` directory.
+    const resourcesDir = path.resolve(buildPath, '..');
     if (platform === 'win32') {
-      // these files (like nylas-mailto-default.reg) go alongside the ASAR, not inside it,
-      // so we need to move out of the `app` directory.
-      const resourcesDir = path.resolve(buildPath, '..');
       fs.copySync(path.resolve(grunt.config('appDir'), 'build', 'resources', 'win'), resourcesDir);
     }
     callback();
@@ -98,7 +119,6 @@ module.exports = (grunt) => {
       },
       'ignore': [
         // top level dirs we never want
-        '^[\\/]+apm',
         '^[\\/]+arclib',
         '^[\\/]+build',
         '^[\\/]+electron',
@@ -165,6 +185,7 @@ module.exports = (grunt) => {
       ],
       'afterCopy': [
         runCopyPlatformSpecificResources,
+        runCopyAPM,
         runCopySymlinkedPackages,
         runElectronCompile,
       ],
