@@ -17,6 +17,9 @@ cp -r <%= contentsDir %>/* %{buildroot}/usr/local/share/nylas
 
 mkdir -p %{buildroot}/usr/local/bin/
 
+cp <%= linuxAssetsDir %>/nylas.sh %{buildroot}/usr/local/bin/nylas
+chmod 755 %{buildroot}/usr/local/bin/nylas
+
 mkdir -p %{buildroot}/usr/local/share/applications/
 mv nylas.desktop %{buildroot}/usr/local/share/applications/
 
