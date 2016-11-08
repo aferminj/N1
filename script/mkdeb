@@ -7,9 +7,6 @@ SCRIPT=`readlink -f "$0"`
 ROOT=`readlink -f $(dirname $SCRIPT)/..`
 cd $ROOT
 
-# debian', 'postinst')
-# const postrmFilePath = path.join(linuxAssetsDir, 'debian', 'postrm')
-
 VERSION="$1"
 ARCH="$2"
 CONTROL_FILE="$3"
@@ -28,8 +25,8 @@ chmod $FILE_MODE "$TARGET_ROOT"
 TARGET="$TARGET_ROOT/nylas-$VERSION-$ARCH"
 
 mkdir -m $FILE_MODE -p "$TARGET/usr"
-cp "$APP_PATH" "$TARGET/usr/nylas"
-env INSTALL_PREFIX="$TARGET/usr" script/grunt install
+mkdir -m $FILE_MODE -p "$TARGET/usr/share"
+cp -r "$APP_PATH" "$TARGET/usr/share/nylas"
 
 mkdir -m $FILE_MODE -p "$TARGET/DEBIAN"
 cp "$CONTROL_FILE" "$TARGET/DEBIAN/control"
@@ -51,7 +48,7 @@ done
 
 # Copy generated LICENSE.md to /usr/share/doc/nylas/copyright
 mkdir -m $FILE_MODE -p "$TARGET/usr/share/doc/nylas"
-cp "$TARGET/usr/share/nylas/resources/LICENSE.md" "$TARGET/usr/share/doc/nylas/copyright"
+cp "$TARGET/usr/share/nylas/LICENSE" "$TARGET/usr/share/doc/nylas/copyright"
 
 # Add lintian overrides
 mkdir -m $FILE_MODE -p "$TARGET/usr/share/lintian/overrides"

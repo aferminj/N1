@@ -29,7 +29,7 @@ module.exports = (grunt) => {
     const cmd = 'du';
     const args = ['-sk', dir];
     spawn({cmd, args}, (error, {stdout}) => {
-      const installedSize = stdout.split(/\s+/).unshift() || '200000'; // default to 200MB
+      const installedSize = stdout.split(/\s+/).shift() || '200000'; // default to 200MB
       callback(null, installedSize);
     });
   }
