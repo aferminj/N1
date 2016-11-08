@@ -6,8 +6,8 @@
     "url": "https://github.com/nylas/edgehill.git"
   },
   "dependencies": {
-    "chalk": "1.x.x",
     "archiver": "1.2.x",
+    "chalk": "1.x.x",
     "coffeelint-cjsx": "^2.0",
     "electron-packager": "^8.2.0",
     "grunt": "~0.4.1",
@@ -24,6 +24,7 @@
     "request": "^2.64",
     "s3": "^4.3",
     "temp": "~0.8.1",
+    "underscore": "^1.8.3",
     "unzip": "~0.1.9",
     "webdriverio": "^2.4.5"
   }

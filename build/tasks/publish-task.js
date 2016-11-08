@@ -114,11 +114,11 @@ module.exports = (grunt) => {
           key: `${fullVersion}/${process.platform}/${process.arch}/RELEASES`,
         });
         uploads.push({
-          source: `${outputDir}/Nylas N1Setup.exe`,
+          source: `${outputDir}/N1Setup.exe`,
           key: `${fullVersion}/${process.platform}/${process.arch}/N1Setup.exe`,
         });
         uploads.push({
-          source: `${outputDir}/nylas-${packageVersion}-full.nupkg`,
+          source: `${outputDir}/Nylas-${packageVersion}-full.nupkg`,
           key: `${fullVersion}/${process.platform}/${process.arch}/nylas-${packageVersion}-full.nupkg`,
         });
       } else if (process.platform === 'linux') {

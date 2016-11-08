@@ -52,6 +52,9 @@ module.exports = (grunt) => {
     postBuildSteps.push('create-windows-installer')
   } else if (grunt.option('platform') === 'darwin') {
     postBuildSteps.push('create-mac-installer')
+  } else if (grunt.option('platform') === 'linux') {
+    postBuildSteps.push('create-deb-installer');
+    postBuildSteps.push('create-rpm-installer');
   }
 
   const {shouldPublishBuild} = require('./tasks/task-helpers')(grunt);
